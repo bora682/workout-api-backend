@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, CheckConstraint
+from datetime import date
 
 db = SQLAlchemy()
 
@@ -32,3 +33,26 @@ class Exercise(db.Model):
         if not value or not value.strip():
             raise ValueError("Category is required.")
         return value.strip()
+    
+
+class Workout(db.Model):
+    __tablename__ = "workouts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    duration_minutes = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.Text)
+
+    # ---- Table Constraint (2) ----
+    __table_args__ = (
+        CheckConstraint("duration_minutes > 0", name="ck_duration_positive"),
+    )
+
+    # ---- Model Validation ----
+    @validates("duration_minutes")
+    def validate_duration_minutes(self, _, value):
+        if not isinstance(value, int):
+            raise ValueError("duration_minutes must be an integer.")
+        if value <= 0:
+            raise ValueError("duration_minutes must be greater than 0.")
+        return value

@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 from sqlalchemy import UniqueConstraint, CheckConstraint, ForeignKey
 from datetime import date
 
@@ -17,6 +17,19 @@ class Exercise(db.Model):
     # ---- Table Constraint (1) ----
     __table_args__ = (
         UniqueConstraint("name", name="uq_exercise_name"),
+    )
+
+    # ---- Relationships ----
+    workout_exercises = relationship(
+        "WorkoutExercise",
+        back_populates="exercise",
+        cascade="all, delete-orphan"
+    )
+
+    workouts = relationship(
+        "Workout",
+        secondary="workout_exercises",
+        viewonly=True
     )
 
     # ---- Model Validations (2) ----
@@ -46,6 +59,19 @@ class Workout(db.Model):
     # ---- Table Constraint (2) ----
     __table_args__ = (
         CheckConstraint("duration_minutes > 0", name="ck_duration_positive"),
+    )
+
+    # ---- Relationships ----
+    workout_exercises = relationship(
+        "WorkoutExercise",
+        back_populates="workout",
+        cascade="all, delete-orphan"
+    )
+
+    exercises = relationship(
+        "Exercise",
+        secondary="workout_exercises",
+        viewonly=True
     )
 
     # ---- Model Validation ----
@@ -103,6 +129,10 @@ class WorkoutExercise(db.Model):
             name="ck_at_least_one_metric"
         ),
     )
+
+    # ---- Relationships ----
+    workout = relationship("Workout", back_populates="workout_exercises")
+    exercise = relationship("Exercise", back_populates="workout_exercises")
 
     # ---- Model Validation ----
     @validates("reps", "sets", "duration_seconds")

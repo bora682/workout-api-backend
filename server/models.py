@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
-from sqlalchemy import UniqueConstraint, CheckConstraint
+from sqlalchemy import UniqueConstraint, CheckConstraint, ForeignKey
 from datetime import date
 
 db = SQLAlchemy()
@@ -55,4 +55,62 @@ class Workout(db.Model):
             raise ValueError("duration_minutes must be an integer.")
         if value <= 0:
             raise ValueError("duration_minutes must be greater than 0.")
+        return value
+    
+
+class WorkoutExercise(db.Model):
+    __tablename__ = "workout_exercises"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    workout_id = db.Column(
+        db.Integer,
+        ForeignKey("workouts.id"),
+        nullable=False
+    )
+
+    exercise_id = db.Column(
+        db.Integer,
+        ForeignKey("exercises.id"),
+        nullable=False
+    )
+
+    reps = db.Column(db.Integer)
+    sets = db.Column(db.Integer)
+    duration_seconds = db.Column(db.Integer)
+
+    # ---- Table Constraints ----
+    __table_args__ = (
+        UniqueConstraint(
+            "workout_id",
+            "exercise_id",
+            name="uq_workout_exercise"
+        ),
+        CheckConstraint(
+            "(reps IS NULL) OR (reps > 0)",
+            name="ck_reps_positive"
+        ),
+        CheckConstraint(
+            "(sets IS NULL) OR (sets > 0)",
+            name="ck_sets_positive"
+        ),
+        CheckConstraint(
+            "(duration_seconds IS NULL) OR (duration_seconds > 0)",
+            name="ck_duration_seconds_positive"
+        ),
+        CheckConstraint(
+            "(reps IS NOT NULL) OR (sets IS NOT NULL) OR (duration_seconds IS NOT NULL)",
+            name="ck_at_least_one_metric"
+        ),
+    )
+
+    # ---- Model Validation ----
+    @validates("reps", "sets", "duration_seconds")
+    def validate_metrics(self, key, value):
+        if value is None:
+            return None
+        if not isinstance(value, int):
+            raise ValueError(f"{key} must be an integer.")
+        if value <= 0:
+            raise ValueError(f"{key} must be greater than 0.")
         return value

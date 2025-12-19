@@ -45,6 +45,14 @@ def get_workouts():
     workouts = Workout.query.all()
     return make_response(workouts_schema.dump(workouts), 200)
 
+@app.route("/workouts/<int:id>", methods=["GET"])
+def get_workout_by_id(id):
+    workout = Workout.query.get(id)
+    if not workout:
+        return make_response({"error": "Workout not found"}, 404)
+    
+    return make_response(workout_schema.dump(workout), 200)
+
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

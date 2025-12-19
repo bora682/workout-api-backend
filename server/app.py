@@ -45,6 +45,7 @@ def get_workouts():
     workouts = Workout.query.all()
     return make_response(workouts_schema.dump(workouts), 200)
 
+
 @app.route("/workouts/<int:id>", methods=["GET"])
 def get_workout_by_id(id):
     workout = Workout.query.get(id)
@@ -52,6 +53,29 @@ def get_workout_by_id(id):
         return make_response({"error": "Workout not found"}, 404)
     
     return make_response(workout_schema.dump(workout), 200)
+
+
+@app.route("/workouts", methods=["POST"])
+def create_workout():
+    try:
+        data = workout_schema.load(request.json)
+        workout = Workout(**data)
+        db.session.add(workout)
+        db.session.commit()
+        return make_response(workout_schema.dump(workout), 201)
+    except ValidationError as e:
+        return make_response({"errors": e.messages}, 400)
+
+
+@app.route("/workouts/<int:id>", methods=["DELETE"])
+def delete_workout(id):
+    workout = Workout.query.get(id)
+    if not workout:
+        return make_response({"error": "Workout not found"}, 404)
+    
+    db.session.delete(workout)
+    db.session.commit()
+    return make_response({}, 204)
 
 
 if __name__ == "__main__":

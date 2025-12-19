@@ -105,5 +105,25 @@ def add_exercise_to_workout(workout_id, exercise_id):
         return make_response({"error": str(e)}, 400)
 
 
+@app.route("/exercises/<int:id>", methods=["GET"])
+def get_exercise_by_id(id):
+    exercise = Exercise.query.get(id)
+    if not exercise:
+        return make_response({"error": "Exercise not found"}, 404)
+    
+    return make_response(exercise_schema.dump(exercise), 200)
+
+
+@app.route("/exercises/<int:id>", methods=["DELETE"])
+def delete_exercise(id):
+    exercise = Exercise.query.get(id)
+    if not exercise:
+        return make_response({"error": "Exercise not found"}, 404)
+    
+    db.session.delete(exercise)
+    db.session.commit()
+    return make_response({}, 204)
+
+
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

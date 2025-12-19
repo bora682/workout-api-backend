@@ -40,5 +40,11 @@ def create_exercise():
         return make_response({"errors": e.messages}, 400)
 
 
+@app.route("/workouts", methods=["GET"])
+def get_workouts():
+    workouts = Workout.query.all()
+    return make_response(workouts_schema.dump(workouts), 200)
+
+
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
